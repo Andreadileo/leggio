@@ -1,0 +1,28 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - name: Install Dovecot (test IMAP server)
+        run: sudo apt-get update && sudo apt-get install -y dovecot-imapd
+      - name: Start test IMAP server
+        run: sudo test/setup-dovecot.sh
+      - run: npm ci --omit=dev
+      - run: npm run test:local

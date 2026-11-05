@@ -1,0 +1,22 @@
+LEGGIO — come aprirlo con un clic
+==================================
+
+REQUISITO: Node.js 20.19 o successivo (gratis da https://nodejs.org, versione LTS).
+
+PRIMA VOLTA
+1. Doppio clic su "Crea icona sul Desktop.bat"
+   -> compare l'icona "Leggio Personale" sul Desktop.
+2. Clicca l'icona: Leggio si avvia e si apre nel browser (localhost:4000).
+3. Al primo avvio scegli la password della console (il codice che
+   ti chiede e' nella finestra nera; di solito e' gia' inserito).
+4. Scheda Caselle: collega le tue caselle.
+5. Scheda Telegram (facoltativo): collega il tuo bot.
+
+DA QUI IN POI
+Clicca l'icona ed entra con la password della console.
+Se in Sicurezza attivi il "blocco al riavvio", dopo ogni avvio nessun
+agente e nessun bot legge la posta finche' non entri nella console.
+
+Per spegnere Leggio: chiudi la finestra nera.
+I dati di questa istanza stanno in %APPDATA%\Leggio-Personale
+(separati da qualsiasi altro Leggio sul PC).

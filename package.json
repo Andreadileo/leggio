@@ -1,0 +1,60 @@
+{
+  "name": "leggio",
+  "version": "1.0.0",
+  "description": "Read-only email for AI agents: connect IMAP mailboxes and expose them through a local REST API with revocable tokens, prompt-injection flags and an optional Telegram bot. Nothing can send, move or delete mail.",
+  "keywords": [
+    "email",
+    "imap",
+    "read-only",
+    "ai-agents",
+    "llm",
+    "prompt-injection",
+    "telegram-bot",
+    "self-hosted",
+    "privacy"
+  ],
+  "license": "AGPL-3.0-only",
+  "author": "Andrea Di Leo",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andreadileo/leggio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Andreadileo/leggio/issues"
+  },
+  "main": "server.js",
+  "bin": "server.js",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/run-tests.js && node test/telegram-tests.js",
+    "test:local": "TEST_IMAP_HOST=127.0.0.1 TEST_IMAP_PORT=1143 TEST_USER1=personale@test.it TEST_PASS1=pw-personale TEST_USER2=lavoro@test.it TEST_PASS2=pw-lavoro npm test"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "imapflow": "^1.0.164",
+    "mailparser": "^3.7.1",
+    "html-to-text": "^10.0.0"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.21.0",
+    "resedit": "^3.0.2"
+  },
+  "pkg": {
+    "assets": [
+      "public/**/*"
+    ],
+    "scripts": [
+      "lib-security.js",
+      "lib-mail.js",
+      "lib-store.js",
+      "lib-telegram.js"
+    ],
+    "targets": [
+      "node22-win-x64"
+    ],
+    "outputPath": "dist"
+  }
+}

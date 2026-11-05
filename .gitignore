@@ -1,0 +1,18 @@
+node_modules/
+dist/
+*.log
+.env
+.env.*
+# cartelle dati locali (caselle, token, chiavi): non vanno MAI nel repository
+data/
+Leggio/
+Leggio-Personale/
+accounts.json
+tokens.json
+telegram.json
+processed.json
+key.json
+.secret.key
+audit.log*
+# test
+test/.dovecot/

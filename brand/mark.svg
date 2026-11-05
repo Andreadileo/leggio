@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Leggio">
+  <path d="M13 17.5 L51 12 L51 33 L13 38.5 Z" fill="#2f6bff"/>
+  <path d="M16.5 20.2 L32 28.4 L47.5 15.8" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32 36 V51" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"/>
+  <path d="M22 52.5 H42" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leggio</title>
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="alternate icon" href="favicon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Sblocco / accesso -->
+<div id="gate" class="gate hidden">
+  <form id="gateForm" autocomplete="off">
+    <div class="mark">Leggio</div>
+    <p id="gateText">Inserisci la password per aprire la console.</p>
+    <label class="field hidden" id="gateCodeWrap"><span id="gateCodeLabel">Codice di primo avvio (lo trovi nella finestra di Leggio)</span><input type="text" id="gateCode" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" maxlength="16" placeholder="XXXX-XXXX-XXXX"></label>
+    <label class="field"><span id="gatePassLabel">Password della console</span><input type="password" id="gatePass" autocomplete="current-password" required></label>
+    <label class="field hidden" id="gatePass2Wrap"><span>Ripetila</span><input type="password" id="gatePass2" autocomplete="new-password"></label>
+    <div class="hint warn hidden" id="gateWarn">Non si può recuperare. Se la dimentichi, devi cancellare la cartella dati e ricollegare caselle, token e bot.</div>
+    <div class="err" id="gateErr" role="alert"></div>
+    <button class="btn primary" type="submit" id="gateSubmit">Entra</button>
+  </form>
+</div>
+
+<div id="app" class="app hidden">
+  <aside class="side">
+    <div class="brand"><img src="logo.svg" alt=""> Leggio</div>
+    <button class="nav" data-view="inbox" aria-current="page">
+      <svg viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M5.5 5h13L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5z"/></svg>Posta<span class="count" id="navUnread"></span></button>
+    <button class="nav" data-view="mailboxes">
+      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>Caselle</button>
+    <button class="nav" data-view="telegram">
+      <svg viewBox="0 0 24 24"><path d="M21 4 3 11l6 2 2 6 3-4 5 4z"/><path d="m9 13 8-6"/></svg>Telegram</button>
+    <button class="nav" data-view="tokens">
+      <svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M15 8l2 2"/></svg>Token per agenti</button>
+    <button class="nav" data-view="audit">
+      <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Registro accessi</button>
+    <button class="nav" data-view="security">
+      <svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/></svg>Sicurezza</button>
+    <button class="nav" data-view="docs">
+      <svg viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4"/></svg>API</button>
+    <div class="side-foot">
+      <div>Cartella dati<div class="path" id="dataDir"></div></div>
+      <div id="version"></div>
+      <button class="btn ghost" id="logoutBtn" type="button">Esci dalla console</button>
+      <a href="https://github.com/Andreadileo/leggio" target="_blank" rel="noopener noreferrer">Codice sorgente (AGPL-3.0)</a>
+      <a href="https://ko-fi.com/andreadileo" target="_blank" rel="noopener noreferrer">Sostieni il progetto</a>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- POSTA -->
+    <section class="page" id="view-inbox">
+      <h1>Posta</h1>
+      <div class="toolbar">
+        <input type="search" id="search" placeholder="Cerca mittente o oggetto" autocomplete="off" spellcheck="false">
+        <div class="seg" role="group" aria-label="Filtro">
+          <button type="button" data-filter="all" aria-pressed="true">Tutte</button>
+          <button type="button" data-filter="unread" aria-pressed="false">Da leggere</button>
+        </div>
+        <button class="btn" type="button" id="refreshBtn">Aggiorna</button>
+        <button class="btn ghost" type="button" id="demoBtn" title="Dati di esempio per le presentazioni">Demo</button>
+      </div>
+      <div class="mb-errors" id="mbErrors"></div>
+      <div class="summary" id="summary"></div>
+      <div id="board"></div>
+    </section>
+
+    <!-- CASELLE -->
+    <section class="page hidden" id="view-mailboxes">
+      <h1>Caselle</h1>
+      <p class="lede">Leggio apre ogni casella in sola lettura: non può inviare, spostare, cancellare né segnare come letta nessuna mail.</p>
+      <div class="panel">
+        <h2>Collega una casella</h2>
+        <form class="stack" id="mbForm" autocomplete="off">
+          <label class="field"><span>Provider</span>
+            <select id="preset">
+              <option value="">Altro (inserisci il server a mano)</option>
+              <option value="gmail">Gmail</option>
+              <option value="outlook">Outlook / Hotmail / Microsoft 365</option>
+              <option value="icloud">iCloud</option>
+              <option value="yahoo">Yahoo</option>
+              <option value="libero">Libero</option>
+              <option value="aruba">Aruba</option>
+              <option value="hostinger">Hostinger</option>
+            </select>
+          </label>
+          <div class="hint hidden" id="presetHint"></div>
+          <div class="grid2">
+            <label class="field"><span>Nome (come la vedrai)</span><input type="text" id="mName" placeholder="Personale" required></label>
+            <label class="field"><span>Indirizzo email</span><input type="email" id="mEmail" placeholder="nome@dominio.it"></label>
+          </div>
+          <div class="grid2">
+            <label class="field"><span>Server IMAP</span><input type="text" id="mHost" placeholder="imap.dominio.it" required></label>
+            <label class="field"><span>Porta</span><input type="number" id="mPort" value="993" min="1" max="65535"></label>
+          </div>
+          <div class="grid2">
+            <label class="field"><span>Utente</span><input type="text" id="mUser" placeholder="di solito l'indirizzo completo" required></label>
+            <label class="field"><span id="mPassLabel">Password</span><input type="password" id="mPass" autocomplete="new-password" required></label>
+          </div>
+          <div class="err" id="mErr" role="alert"></div>
+          <div class="actions"><button class="btn primary" type="submit" id="mSubmit">Verifica e collega</button></div>
+        </form>
+      </div>
+      <div class="panel"><h2>Caselle collegate</h2><div class="rows" id="mbList"></div></div>
+    </section>
+
+    <!-- TELEGRAM -->
+    <section class="page hidden" id="view-telegram">
+      <h1>Telegram</h1>
+      <p class="lede">Avvisi delle nuove mail e lettura dal telefono. Negli avvisi escono solo mittente e oggetto; il testo di una mail arriva su Telegram solo quando lo chiedi tu con /leggi. Il bot non può inviare né cancellare mail.</p>
+
+      <div class="panel" id="tgSetup">
+        <h2>Bot</h2>
+        <form class="stack" id="tgTokenForm" autocomplete="off">
+          <div class="hint">Su Telegram apri <b>@BotFather</b>, scrivi <code>/newbot</code>, scegli un nome e copia qui il token che ti dà.</div>
+          <label class="field"><span id="tgTokenLabel">Token del bot</span><input type="password" id="tgToken" placeholder="123456789:AA…" autocomplete="off"></label>
+          <div class="err" id="tgErr" role="alert"></div>
+          <div class="actions"><button class="btn primary" type="submit">Verifica e salva</button><span class="muted" id="tgBotName"></span></div>
+        </form>
+      </div>
+
+      <div class="panel hidden" id="tgLink">
+        <h2>La tua chat</h2>
+        <div id="tgLinkBody"></div>
+      </div>
+
+      <div class="panel hidden" id="tgPrefs">
+        <h2>Cosa ricevere</h2>
+        <form class="stack" id="tgPrefsForm">
+          <div class="checks"><label><input type="checkbox" id="tgEnabled"> Bot attivo</label><label><input type="checkbox" id="tgAlerts"> Avviso per ogni nuova mail</label></div>
+          <div class="grid2">
+            <label class="field"><span>Controlla la posta ogni</span>
+              <select id="tgInterval"><option value="1">1 minuto</option><option value="3">3 minuti</option><option value="5">5 minuti</option><option value="15">15 minuti</option><option value="30">30 minuti</option></select></label>
+            <label class="field"><span>Riassunto giornaliero</span><select id="tgDigest"></select></label>
+          </div>
+          <div class="field"><span>Caselle da controllare (nessuna selezionata = tutte)</span><div class="checks" id="tgBoxes"></div></div>
+          <div class="err" id="tgPrefsErr" role="alert"></div>
+          <div class="actions"><button class="btn primary" type="submit">Salva</button><button class="btn" type="button" id="tgTest">Invia un messaggio di prova</button><span class="muted" id="tgSaved"></span></div>
+        </form>
+      </div>
+      <div class="panel hidden" id="tgDanger">
+        <div class="actions"><span class="muted" style="flex:1">Togliere il bot cancella il suo token da Leggio. Su Telegram il bot resta finché non lo elimini da @BotFather.</span><button class="btn danger" type="button" id="tgRemove">Togli il bot</button></div>
+      </div>
+    </section>
+
+    <!-- TOKEN -->
+    <section class="page hidden" id="view-tokens">
+      <h1>Token per agenti</h1>
+      <p class="lede">Ogni programma che legge la posta (un agente AI, uno script) usa il suo token. Il token permette solo di leggere e puoi revocarlo quando vuoi.</p>
+      <div class="panel">
+        <h2>Crea un token</h2>
+        <form class="stack" id="tokForm" autocomplete="off">
+          <div class="grid2">
+            <label class="field"><span>A cosa serve</span><input type="text" id="tLabel" placeholder="Riassunto del mattino" maxlength="80"></label>
+            <label class="field"><span>Scadenza</span>
+              <select id="tDays"><option value="0">Mai</option><option value="7">Tra 7 giorni</option><option value="30" selected>Tra 30 giorni</option><option value="90">Tra 90 giorni</option><option value="365">Tra un anno</option></select></label>
+          </div>
+          <div class="field"><span>Caselle che può leggere (nessuna selezionata = tutte)</span><div class="checks" id="tBoxes"></div></div>
+          <div class="actions"><button class="btn primary" type="submit">Crea token</button></div>
+          <div id="tokResult"></div>
+        </form>
+      </div>
+      <div class="panel"><h2>Token creati</h2><div class="rows" id="tokList"></div></div>
+    </section>
+
+    <!-- REGISTRO -->
+    <section class="page hidden" id="view-audit">
+      <h1>Registro accessi</h1>
+      <p class="lede">Ogni lettura fatta da un agente o dal bot, gli accessi alla console e i tentativi falliti. Gli ultimi 300 eventi.</p>
+      <div class="panel"><div id="auditBody"></div></div>
+    </section>
+
+    <!-- SICUREZZA -->
+    <section class="page hidden" id="view-security">
+      <h1>Sicurezza</h1>
+      <p class="lede">La password della console serve a entrare qui. Senza, nessuno può aprire la console, né una persona né un agente che gira su questo computer.</p>
+      <div class="panel">
+        <h2>Cambia la password</h2>
+        <form class="stack" id="pwForm" autocomplete="off">
+          <label class="field"><span>Password attuale</span><input type="password" id="pwCurrent" autocomplete="current-password" required></label>
+          <div class="grid2">
+            <label class="field"><span>Nuova password (almeno 10 caratteri)</span><input type="password" id="pwNew" autocomplete="new-password" minlength="10" required></label>
+            <label class="field"><span>Ripetila</span><input type="password" id="pwNew2" autocomplete="new-password" minlength="10" required></label>
+          </div>
+          <div class="err" id="pwErr" role="alert"></div>
+          <div class="actions"><button class="btn primary" type="submit">Cambia password</button><span class="muted" id="pwOk"></span></div>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>Blocco al riavvio</h2>
+        <form class="stack" id="lockForm" autocomplete="off">
+          <p class="muted" id="lockText"></p>
+          <div class="hint warn">Su un server che si riavvia da solo lascialo spento: dopo ogni riavvio Leggio resterebbe fermo, e i tuoi agenti senza posta, finché qualcuno non entra nella console.</div>
+          <label class="field"><span>Password della console, per confermare</span><input type="password" id="lockPass" autocomplete="current-password" required></label>
+          <div class="err" id="lockErr" role="alert"></div>
+          <div class="actions"><button class="btn primary" type="submit" id="lockSubmit"></button></div>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>Cosa fa Leggio per proteggerti</h2>
+        <div class="rows" id="secFacts"></div>
+      </div>
+    </section>
+
+    <!-- API -->
+    <section class="page hidden docs" id="view-docs">
+      <h1>API per agenti</h1>
+      <p class="lede">Indirizzo: <code class="base">http://localhost:4000</code>. Ogni richiesta vuole l'intestazione <code>Authorization: Bearer &lt;token&gt;</code>.</p>
+      <div class="panel">
+        <h3>Caselle</h3>
+        <pre class="code">curl -H "Authorization: Bearer TOKEN" BASE/v1/mailboxes</pre>
+        <h3>Ultime mail (senza il corpo)</h3>
+        <p>Tutte le caselle insieme, oppure una sola con <code>mailbox=</code>. Con <code>unprocessed=1</code> ricevi solo quelle che questo token non ha ancora segnato come elaborate.</p>
+        <pre class="code">curl -H "Authorization: Bearer TOKEN" "BASE/v1/messages?limit=25"
+curl -H "Authorization: Bearer TOKEN" "BASE/v1/messages?mailbox=ID&amp;unprocessed=1"</pre>
+        <h3>Una mail completa</h3>
+        <p>Contiene <code>text</code> (ricavato dall'HTML se manca il testo semplice, con la codifica corretta), <code>text_for_agent</code> (lo stesso testo racchiuso tra delimitatori che lo dichiarano dato non fidato) e <code>security.level</code>: <code>high</code> se sembra contenere istruzioni per un'AI.</p>
+        <pre class="code">curl -H "Authorization: Bearer TOKEN" BASE/v1/messages/MAILBOX_ID/UID</pre>
+        <h3>Segna come elaborate</h3>
+        <p>Scrive solo nel registro di Leggio, legato al token: la casella non viene toccata.</p>
+        <pre class="code">curl -X POST -H "Authorization: Bearer TOKEN" -H "Content-Type: application/json" \
+  -d '{"items":[{"mailbox_id":"ID","uid":123}]}' BASE/v1/processed</pre>
+        <h3>Errori</h3>
+        <p><code>401</code> token mancante, sbagliato, revocato o scaduto · <code>429</code> più di 120 richieste al minuto · <code>503</code> Leggio bloccato dopo il riavvio, finché qualcuno non entra nella console · <code>502</code> il server della casella non risponde.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Lettura -->
+<div class="scrim hidden" id="scrim"></div>
+<aside class="reader closed" id="reader" aria-hidden="true" aria-labelledby="rSubj" role="dialog">
+  <div class="rhead">
+    <div class="top"><h2 id="rSubj"></h2><button class="close" type="button" id="rClose" aria-label="Chiudi">×</button></div>
+    <div class="meta" id="rMeta"></div>
+  </div>
+  <div id="rVerdict"></div>
+  <div class="rbar">
+    <div class="seg" role="group" aria-label="Vista">
+      <button type="button" data-rview="text" aria-pressed="true">Testo</button>
+      <button type="button" data-rview="html" aria-pressed="false">Originale</button>
+    </div>
+    <span class="note" id="rNote"></span>
+  </div>
+  <div class="rbody">
+    <div class="rtext" id="rText"></div>
+    <iframe class="rhtml hidden" id="rHtml" sandbox="" referrerpolicy="no-referrer" title="Mail originale"></iframe>
+  </div>
+  <div class="attach hidden" id="rAttach"></div>
+</aside>
+
+<div id="toast" class="hidden" role="status"></div>
+<script src="app.js"></script>
+</body>
+</html>

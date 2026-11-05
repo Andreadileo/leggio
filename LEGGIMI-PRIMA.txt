@@ -1,0 +1,31 @@
+============================================================
+  LEGGIO — INSTALLAZIONE (leggi prima di tutto)
+============================================================
+
+IMPORTANTE: fai questo PRIMA di estrarre, o Windows bloccher i file.
+
+1) NON aprire subito lo zip.
+   Tasto DESTRO sul file zip scaricato  ->  Proprietà
+   In basso, se c'è la casella "Annulla blocco" (Unblock),
+   METTI LA SPUNTA  ->  OK.
+   (Questo toglie l'etichetta "scaricato da internet".)
+
+2) Ora estrai lo zip (tasto destro -> Estrai tutto).
+
+3) Entra nella cartella estratta e fai doppio clic su:
+       Avvia Leggio.bat
+   Si apre da solo nel browser (http://localhost:4000).
+
+4) Scegli la password della console, poi vai su "Caselle"
+   per aggiungere le tue email.
+
+REQUISITO: Node.js 20.19 o successivo (gratis: https://nodejs.org, versione LTS).
+Le tue caselle vengono salvate in %APPDATA%\Leggio-Personale e NON si
+perdono se in futuro aggiorni il software.
+
+--- Se preferisci senza .bat (via terminale) ---
+Apri il Prompt dei comandi nella cartella ed esegui:
+   npm install
+   npm start
+Poi apri http://localhost:4000 nel browser.
+============================================================
