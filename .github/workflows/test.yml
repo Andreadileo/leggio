@@ -10,7 +10,8 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Ubuntu 24.04: Dovecot 2.3, compatibile con test/setup-dovecot.sh (Ubuntu 26 porta Dovecot 2.4, con un altro formato)
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         node: [20, 22, 24]
