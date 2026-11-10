@@ -120,6 +120,10 @@ Girano anche a ogni push, con GitHub Actions.
 
 Issue e pull request sono benvenute, in italiano o in inglese. Vedi [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Storia
+
+Creato da Andrea Di Leo a Roma nel luglio 2026, prima con il nome *Relvane*; open source come Leggio dal novembre 2026. Vedi il [changelog](CHANGELOG.md).
+
 ## Licenza
 
 [GNU AGPL-3.0](LICENSE) © 2026 Andrea Di Leo.

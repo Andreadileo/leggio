@@ -131,6 +131,10 @@ site/             project website
 
 Issues and pull requests are welcome, in English or Italian. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## History
+
+Created by Andrea Di Leo in Rome in July 2026, first as *Relvane*; open source as Leggio since November 2026. See the [changelog](CHANGELOG.md).
+
 ## License
 
 [GNU AGPL-3.0](LICENSE) © 2026 Andrea Di Leo.

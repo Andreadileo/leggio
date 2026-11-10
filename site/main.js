@@ -54,7 +54,7 @@
     os_p: 'Leggio è pubblicato con la licenza GNU AGPL-3.0. Usalo, modificalo, condividilo. Se offri una versione modificata ad altri via rete, pubblica le tue modifiche con la stessa licenza.',
     os_gh: 'Leggi il codice', os_contrib: 'Contribuisci', os_kofi: 'Sostienilo su Ko-fi',
     os_sec: 'Hai trovato un problema di sicurezza? Segnalalo in privato, come spiegato in <a href="SECURITY_URL">SECURITY.md</a>.',
-    foot: 'Leggio è fatto a Roma da Andrea Di Leo.',
+    foot: 'Leggio è fatto a Roma da Andrea Di Leo, dal luglio 2026.',
   };
   const META = {
     en: { title: document.title, desc: document.querySelector('meta[name=description]').content },
