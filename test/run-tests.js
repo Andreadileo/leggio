@@ -72,12 +72,16 @@ function startServer(env) {
     child = spawn(process.execPath, [path.join(ROOT, 'server.js')], { env: { ...process.env, OPEN_BROWSER: '0', ...env }, stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '';
     const timer = setTimeout(() => reject(new Error('server non partito: ' + out)), 8000);
-    OUT = '';
+    OUT = ''; let resolved = false;
     const onData = (d) => {
       out += d; OUT += d;
-      if (/Console di amministrazione/.test(out)) {
-        const m = out.match(/PRIMO AVVIO[^\n]*?([A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})/); SETUP_CODE = m ? m[1] : null;
-        clearTimeout(timer); resolve(out);
+      // Pronto quando ha scritto la cartella dati e, se serve, il codice di primo avvio (arriva subito dopo).
+      if (/Cartella dati/.test(out) && !resolved) {
+        resolved = true;
+        setTimeout(() => {
+          const m = out.match(/PRIMO AVVIO[^\n]*?([A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})/); SETUP_CODE = m ? m[1] : null;
+          clearTimeout(timer); resolve(out);
+        }, 250);
       }
     };
     child.stdout.on('data', onData); child.stderr.on('data', onData);
@@ -402,6 +406,74 @@ const v1 = (p, o) => req(BASE, p, o);
   await t('nessun file temporaneo rimasto nella cartella dati', async () => {
     assert.ok(!fs.readdirSync(dataDir).some(f => f.endsWith('.tmp')));
   });
+
+  console.log('\nBackup su un altro computer');
+  let backupFile; const boxIds = (await adm('/admin/accounts')).data.map(a => a.id).sort();
+  await t('esportare il backup vuole la password della console e una password del backup lunga', async () => {
+    assert.equal((await adm('/admin/backup/export', { method: 'POST', body: { password: 'sbagliata-xyz', backupPassword: 'backup-password-lunga' } })).status, 401);
+    assert.equal((await adm('/admin/backup/export', { method: 'POST', body: { password: 'nuova-password-2', backupPassword: 'corta' } })).status, 400);
+    const r = await adm('/admin/backup/export', { method: 'POST', body: { password: 'nuova-password-2', backupPassword: 'backup-password-lunga' } });
+    assert.equal(r.status, 200); backupFile = r.data;
+    assert.equal(backupFile.format, 'leggio-backup');
+  });
+  await t('nel file di backup niente è in chiaro (password delle caselle, token)', async () => {
+    const raw = JSON.stringify(backupFile);
+    for (const secret of [U1.pass, U2.pass, token]) assert.ok(!raw.includes(secret), 'trovato in chiaro');
+  });
+  await t('il backup non si esporta senza sessione', async () => {
+    assert.equal((await adm('/admin/backup/export', { method: 'POST', body: { password: 'nuova-password-2', backupPassword: 'backup-password-lunga' }, cookie: false })).status, 401);
+  });
+  await stopServer(); jar = '';
+  const pcDir = fs.mkdtempSync(path.join(os.tmpdir(), 'leggio-pc2-'));
+  await startServer({ ...env, LEGGIO_DATA_DIR: pcDir });
+  await adm('/admin/setup', { method: 'POST', body: { code: SETUP_CODE, password: 'password-altro-pc' } });
+  await t('sull\'altro computer: password del backup sbagliata, niente importato', async () => {
+    const r = await adm('/admin/backup/import', { method: 'POST', body: { backup: backupFile, backupPassword: 'sbagliata-davvero' } });
+    assert.equal(r.status, 400); assert.equal((await adm('/admin/accounts')).data.length, 0);
+  });
+  await t('importato: stesse caselle con gli stessi id, lo stesso token funziona, la posta si legge', async () => {
+    const r = await adm('/admin/backup/import', { method: 'POST', body: { backup: backupFile, backupPassword: 'backup-password-lunga' } });
+    assert.equal(r.status, 200, JSON.stringify(r.data)); assert.equal(r.data.addedBoxes, 2);
+    assert.deepEqual((await adm('/admin/accounts')).data.map(a => a.id).sort(), boxIds);
+    const m = await v1('/v1/messages', { token }); assert.equal(m.status, 200); assert.equal(m.data.data.length, 5);
+    assert.equal((await v1(`/v1/messages/${mb1}/${list[0].uid}`, { token })).status, 200);
+  });
+  await t('importare due volte non duplica niente', async () => {
+    const r = await adm('/admin/backup/import', { method: 'POST', body: { backup: backupFile, backupPassword: 'backup-password-lunga' } });
+    assert.equal(r.data.addedBoxes, 0); assert.equal(r.data.addedTokens, 0);
+    assert.equal((await adm('/admin/accounts')).data.length, 2);
+  });
+  await t('un file che non è un backup: rifiutato', async () => {
+    assert.equal((await adm('/admin/backup/import', { method: 'POST', body: { backup: { hello: 1 }, backupPassword: 'x' } })).status, 400);
+  });
+  await stopServer(); jar = ''; fs.rmSync(pcDir, { recursive: true, force: true });
+
+  console.log('\nAvviso di aggiornamento');
+  let ghCalls = 0; let ghBody = { tag_name: 'v9.9.9', html_url: 'https://github.com/Andreadileo/leggio/releases/tag/v9.9.9' };
+  const fakeGh = require('http').createServer((q, r) => { ghCalls++; r.setHeader('Content-Type', 'application/json'); r.end(JSON.stringify(ghBody)); });
+  await new Promise(r => fakeGh.listen(0, '127.0.0.1', r));
+  await startServer({ ...env, LEGGIO_UPDATE_URL: `http://127.0.0.1:${fakeGh.address().port}/latest` });
+  await adm('/admin/login', { method: 'POST', body: { password: 'nuova-password-2' } });
+  await t('versione nuova su GitHub: la console lo segnala', async () => {
+    const r = await adm('/admin/update'); assert.equal(r.data.enabled, true); assert.equal(r.data.newer, true); assert.equal(r.data.latest, '9.9.9');
+    assert.match(r.data.url, /^https:\/\/github\.com\/Andreadileo\/leggio\/releases/);
+  });
+  await t('il controllo si fa al massimo una volta al giorno', async () => {
+    const before = ghCalls; await adm('/admin/update'); await adm('/admin/update'); assert.equal(ghCalls, before);
+  });
+  await t('spento: nessuna richiesta a GitHub', async () => {
+    await adm('/admin/update', { method: 'POST', body: { enabled: false } });
+    const before = ghCalls; const r = await adm('/admin/update');
+    assert.equal(r.data.enabled, false); assert.equal(r.data.newer, false); assert.equal(ghCalls, before);
+    await adm('/admin/update', { method: 'POST', body: { enabled: true } });
+  });
+  await t('un link di download fuori dal repository di Leggio viene ignorato', async () => {
+    ghBody = { tag_name: 'v9.9.10', html_url: 'https://evil.example/leggio.exe' };
+    await stopServer(); jar = ''; await startServer({ ...env, LEGGIO_UPDATE_URL: `http://127.0.0.1:${fakeGh.address().port}/latest` });
+    await adm('/admin/login', { method: 'POST', body: { password: 'nuova-password-2' } });
+    const r = await adm('/admin/update'); assert.equal(r.data.url, 'https://github.com/Andreadileo/leggio/releases');
+  });
+  fakeGh.close();
   await stopServer();
 
   console.log('\nModalità esposta (HOST=0.0.0.0, API e console separate)');

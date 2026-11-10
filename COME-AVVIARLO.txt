@@ -18,5 +18,5 @@ Se in Sicurezza attivi il "blocco al riavvio", dopo ogni avvio nessun
 agente e nessun bot legge la posta finche' non entri nella console.
 
 Per spegnere Leggio: chiudi la finestra nera.
-I dati di questa istanza stanno in %APPDATA%\Leggio-Personale
+I dati di questa istanza stanno in %APPDATA%\Leggio
 (separati da qualsiasi altro Leggio sul PC).

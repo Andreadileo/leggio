@@ -20,7 +20,7 @@ IMPORTANTE: fai questo PRIMA di estrarre, o Windows bloccher i file.
    per aggiungere le tue email.
 
 REQUISITO: Node.js 20.19 o successivo (gratis: https://nodejs.org, versione LTS).
-Le tue caselle vengono salvate in %APPDATA%\Leggio-Personale e NON si
+Le tue caselle vengono salvate in %APPDATA%\Leggio e NON si
 perdono se in futuro aggiorni il software.
 
 --- Se preferisci senza .bat (via terminale) ---

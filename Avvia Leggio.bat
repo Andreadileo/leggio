@@ -23,8 +23,6 @@ if errorlevel 1 (
   echo  Installo o riparo i componenti, attendi un minuto...
   call npm install --omit=dev --no-audit --no-fund
 )
-rem Cartella dati di QUESTA istanza: separata da qualsiasi altro Leggio sul PC.
-if not defined LEGGIO_DATA_DIR set "LEGGIO_DATA_DIR=%APPDATA%\Leggio-Personale"
 set OPEN_BROWSER=1
 echo  Avvio di Leggio... la console si aprira' nel browser.
 echo  (Per spegnere Leggio, chiudi questa finestra.)

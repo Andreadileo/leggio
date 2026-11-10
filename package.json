@@ -1,6 +1,6 @@
 {
   "name": "leggio",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Read-only email for AI agents: connect IMAP mailboxes and expose them through a local REST API with revocable tokens, prompt-injection flags and an optional Telegram bot. Nothing can send, move or delete mail.",
   "keywords": [
     "email",
@@ -30,7 +30,8 @@
   "scripts": {
     "start": "node server.js",
     "test": "node test/run-tests.js && node test/telegram-tests.js",
-    "test:local": "TEST_IMAP_HOST=127.0.0.1 TEST_IMAP_PORT=1143 TEST_USER1=personale@test.it TEST_PASS1=pw-personale TEST_USER2=lavoro@test.it TEST_PASS2=pw-lavoro npm test"
+    "test:local": "TEST_IMAP_HOST=127.0.0.1 TEST_IMAP_PORT=1143 TEST_USER1=personale@test.it TEST_PASS1=pw-personale TEST_USER2=lavoro@test.it TEST_PASS2=pw-lavoro npm test",
+    "build:exe": "node scripts/build-exe.js"
   },
   "dependencies": {
     "express": "^4.19.2",

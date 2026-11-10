@@ -4,7 +4,7 @@
 
 <p align="center"><b>La posta in sola lettura per gli agenti AI.</b><br>Il tuo agente può leggere le tue mail. Non può inviarle, spostarle, cancellarle, né farsi convincere a farlo.</p>
 
-<p align="center"><a href="README.md">English</a> · <a href="#avvio-rapido">Avvio rapido</a> · <a href="#api">API</a></p>
+<p align="center"><a href="README.md">English</a> · <a href="#scarica-per-windows">Scarica</a> · <a href="#avvio-rapido-dal-codice">Avvio rapido</a> · <a href="#api">API</a></p>
 
 ---
 
@@ -31,8 +31,18 @@ Gira sul tuo computer o sul tuo server. La tua posta non passa da servizi di ter
 - **Password della console, sempre.** Senza, nessuno entra nella console, nemmeno un agente che gira sullo stesso computer: gli agenti hanno solo il loro token. Il primo avvio si conferma con un codice monouso mostrato nella finestra di Leggio, così un programma locale non può prendersi la console prima di te.
 - **Blocco al riavvio (facoltativo).** La chiave che cifra le password delle caselle e il token del bot viene protetta dalla password della console: dopo un riavvio nessuno legge la posta finché non entri. Utile sul portatile; da lasciare spento su un server che si riavvia da solo.
 - **Una console locale** per collegare le caselle, creare token, leggere le mail in sicurezza (senza script e senza immagini esterne, quindi niente pixel spia) e controllare il registro degli accessi.
+- **Backup cifrato.** Esporti caselle, token e bot in un unico file protetto da una password e lo importi su un altro computer. Gli id delle caselle e i token restano gli stessi, così i tuoi agenti continuano a funzionare.
+- **Avviso di aggiornamento.** Una volta al giorno la console controlla su GitHub se c'è una versione nuova. Non invia nessun dato tuo, e si può spegnere.
 
-## Avvio rapido
+Niente account, niente cloud: ogni copia di Leggio è indipendente e tiene i dati sul proprio computer.
+
+## Scarica per Windows
+
+Scarica **[Leggio.exe](https://github.com/Andreadileo/leggio/releases/latest/download/Leggio.exe)** e fai doppio clic. Non c'è niente da installare e non serve Node.js. I tuoi dati vanno in `%APPDATA%\Leggio`.
+
+Il file non è ancora firmato digitalmente, quindi Windows può mostrare *"Windows ha protetto il PC"*: clicca **Ulteriori informazioni → Esegui comunque**. Puoi verificare cosa stai eseguendo: il codice di ogni versione è in questo repository.
+
+## Avvio rapido (dal codice)
 
 Serve [Node.js](https://nodejs.org) **20.19 o successivo**.
 
@@ -78,7 +88,7 @@ Passagli `text_for_agent` invece di `text` e tratta `security.level == "high"` c
 
 | Variabile | A cosa serve | Predefinito |
 |---|---|---|
-| `LEGGIO_DATA_DIR` | Cartella dati di questa istanza. Due istanze con cartelle diverse non condividono nulla. | `%APPDATA%\Leggio` o `~/Leggio` (l'avvio per Windows usa `%APPDATA%\Leggio-Personale`) |
+| `LEGGIO_DATA_DIR` | Cartella dati di questa istanza. Due istanze con cartelle diverse non condividono nulla. | `%APPDATA%\Leggio` su Windows, `~/Leggio` altrove |
 | `PORT` | Porta dell'API (e della console in modalità locale) | `4000` |
 | `HOST` | Indirizzo di ascolto dell'API | `127.0.0.1` |
 | `ADMIN_PORT` | Porta della console quando `HOST` non è locale | `PORT + 1` |
@@ -106,7 +116,7 @@ Hai trovato una vulnerabilità? Leggi [SECURITY.md](SECURITY.md) e segnalala in 
 
 ## Test
 
-I test usano un vero server IMAP (Dovecot) e un finto server Telegram. Coprono sola lettura, token, password della console e blocco al riavvio, protezioni della console, segnalazioni di injection e regole di privacy del bot: 70 test in tutto. Su Linux:
+I test usano un vero server IMAP (Dovecot) e un finto server Telegram. Coprono sola lettura, token, password della console e blocco al riavvio, protezioni della console, segnalazioni di injection e regole di privacy del bot: 85 test in tutto. Su Linux:
 
 ```bash
 sudo apt-get install -y dovecot-imapd

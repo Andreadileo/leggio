@@ -181,6 +181,32 @@ class ConsoleAuth {
   }
 }
 
+// ---------- File di backup cifrato ----------
+// Per portare caselle, token e bot su un altro computer. Il contenuto è cifrato con una password
+// scelta al momento (scrypt + AES-256-GCM): senza quella password il file è inutile.
+const MIN_BACKUP_LEN = 12;
+function sealBackup(payload, password, meta) {
+  if (typeof password !== 'string' || password.length < MIN_BACKUP_LEN) {
+    throw new Error(`La password del backup deve avere almeno ${MIN_BACKUP_LEN} caratteri`);
+  }
+  const salt = crypto.randomBytes(16), iv = crypto.randomBytes(12);
+  const key = KeyVault.derive(password, salt);
+  const c = crypto.createCipheriv('aes-256-gcm', key, iv);
+  const ct = Buffer.concat([c.update(JSON.stringify(payload), 'utf8'), c.final()]);
+  return { format: 'leggio-backup', v: 1, ...meta, kdf: 'scrypt', N: SCRYPT.N, r: SCRYPT.r, p: SCRYPT.p,
+    salt: salt.toString('hex'), iv: iv.toString('hex'), tag: c.getAuthTag().toString('hex'), ct: ct.toString('base64') };
+}
+function openBackup(file, password) {
+  if (!file || file.format !== 'leggio-backup' || file.v !== 1) throw new Error('Questo non è un file di backup di Leggio.');
+  if (typeof password !== 'string' || !password) throw new Error('Inserisci la password del backup.');
+  try {
+    const key = KeyVault.derive(password, Buffer.from(file.salt, 'hex'));
+    const d = crypto.createDecipheriv('aes-256-gcm', key, Buffer.from(file.iv, 'hex'));
+    d.setAuthTag(Buffer.from(file.tag, 'hex'));
+    return JSON.parse(Buffer.concat([d.update(Buffer.from(file.ct, 'base64')), d.final()]).toString('utf8'));
+  } catch (_) { throw new Error('Password del backup sbagliata, o file danneggiato.'); }
+}
+
 // ---------- Log accessi con rotazione ----------
 const AUDIT_MAX_BYTES = 5 * 1024 * 1024;
 function makeAudit(file) {
@@ -200,4 +226,4 @@ function readAuditTail(file, n) {
   return lines.filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
 }
 
-module.exports = { resolveDataDir, ensureDir, writeAtomic, readJson, writeJson, KeyVault, ConsoleAuth, MIN_MASTER_LEN, makeAudit, readAuditTail };
+module.exports = { resolveDataDir, ensureDir, writeAtomic, readJson, writeJson, KeyVault, ConsoleAuth, MIN_MASTER_LEN, sealBackup, openBackup, MIN_BACKUP_LEN, makeAudit, readAuditTail };

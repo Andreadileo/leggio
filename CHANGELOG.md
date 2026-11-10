@@ -4,6 +4,13 @@ Leggio was created by Andrea Di Leo in Rome in **July 2026**. It started under t
 
 *Leggio è stato creato da Andrea Di Leo a Roma nel **luglio 2026**. È nato con il nome Relvane ed è diventato open source come Leggio nel novembre 2026.*
 
+## 1.1.0 — 2026-11-10
+
+- **Leggio.exe**: a single Windows file, nothing to install (built with `npm run build:exe`)
+- **Encrypted backup**: export mailboxes, tokens, processed log and Telegram bot to a password-protected file and import it on another computer, keeping the same IDs and tokens
+- **Update notice**: the console checks GitHub once a day for a newer release; can be turned off (`LEGGIO_UPDATE_CHECK=0` or from the console)
+- The Windows launcher now uses the same data folder as the .exe (`%APPDATA%\Leggio`)
+
 ## 1.0.0 — 2026-11-05 · Leggio
 
 First public, open-source release (AGPL-3.0), renamed from Relvane.

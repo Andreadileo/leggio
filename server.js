@@ -15,7 +15,7 @@ const { scanContent, wrapForAgent } = require('./lib-security');
 const { fixMojibake, bestText } = require('./lib-mail');
 const store = require('./lib-store');
 
-const VERSION = '1.0.0';
+const VERSION = require('./package.json').version;
 const PORT = Number(process.env.PORT) || 4000;
 const HOST = process.env.HOST || '127.0.0.1'; // default sicuro: solo locale
 const LOOPBACK_HOSTS = ['127.0.0.1', 'localhost', '::1'];
@@ -40,6 +40,7 @@ const FILES = {
   accounts: path.join(DATA_DIR, 'accounts.json'),
   tokens: path.join(DATA_DIR, 'tokens.json'),
   processed: path.join(DATA_DIR, 'processed.json'),
+  settings: path.join(DATA_DIR, 'settings.json'),
   audit: path.join(DATA_DIR, 'audit.log'),
 };
 const vault = new store.KeyVault(DATA_DIR);
@@ -348,6 +349,7 @@ function adminAuth(req, res, next) {
 }
 
 admin.use(localOnly);
+admin.use('/admin/backup/import', express.json({ limit: '20mb' })); // un backup può essere grande
 admin.use('/admin', express.json({ limit: '256kb' }));
 
 admin.get('/admin/status', (req, res) => {
@@ -436,6 +438,105 @@ admin.post('/admin/lock-on-restart', (req, res) => {
   catch (err) { return res.status(400).json({ error: err.message }); }
   audit({ event: enabled ? 'lock_on' : 'lock_off', ip: req.socket.remoteAddress });
   res.json({ ok: true, lockOnRestart: vault.hasMaster() });
+});
+
+// ---------- Backup cifrato: portare tutto su un altro computer ----------
+// Esporta caselle (con le password, ricifrate con la password del backup), token, registro
+// delle elaborate e bot Telegram. Serve la password della console per confermare.
+admin.post('/admin/backup/export', (req, res) => {
+  const { password, backupPassword } = req.body || {};
+  if (!consoleAuth.verify(password)) return res.status(401).json({ error: 'Password della console sbagliata.' });
+  let file;
+  try {
+    const accounts = loadAccounts().map(({ passwordEnc, ...a }) => ({ ...a, password: vault.decrypt(passwordEnc) }));
+    const tg = telegram.config();
+    const telegramOut = tg.botTokenEnc ? { ...tg, botTokenEnc: undefined, botToken: telegram.token() } : null;
+    file = store.sealBackup({ accounts, tokens: loadTokens(), processed: loadProcessed(), telegram: telegramOut },
+      backupPassword, { createdAt: new Date().toISOString(), leggio: VERSION, counts: { mailboxes: accounts.length } });
+  } catch (err) { return res.status(400).json({ error: err.message }); }
+  audit({ event: 'backup_export', ip: req.socket.remoteAddress });
+  res.json(file);
+});
+
+// Importa un backup. Le caselle mantengono il loro id (i registri degli agenti restano validi),
+// i token restano gli stessi. Ciò che c'è già non viene sovrascritto.
+admin.post('/admin/backup/import', (req, res) => {
+  const { backup, backupPassword } = req.body || {};
+  let data;
+  try { data = store.openBackup(backup, backupPassword); } catch (err) { return res.status(400).json({ error: err.message }); }
+  const accounts = loadAccounts();
+  const have = new Set(accounts.map(a => a.id));
+  const sameBox = (a) => accounts.some(x => x.host === a.host && x.user === a.user);
+  let addedBoxes = 0, skippedBoxes = 0;
+  for (const a of Array.isArray(data.accounts) ? data.accounts : []) {
+    if (!a || typeof a.id !== 'string' || typeof a.password !== 'string' || have.has(a.id) || sameBox(a)) { skippedBoxes++; continue; }
+    if (accounts.length >= MAX_ACCOUNTS) { skippedBoxes++; continue; }
+    const { password, ...rest } = a;
+    accounts.push({ ...rest, passwordEnc: vault.encrypt(password) });
+    have.add(a.id); addedBoxes++;
+  }
+  saveAccounts(accounts);
+
+  const tokens = loadTokens();
+  const haveTok = new Set(tokens.map(t => t.id));
+  let addedTokens = 0;
+  for (const t of Array.isArray(data.tokens) ? data.tokens : []) {
+    if (!t || typeof t.id !== 'string' || typeof t.hash !== 'string' || haveTok.has(t.id) || tokens.some(x => x.hash === t.hash)) continue;
+    tokens.push(t); haveTok.add(t.id); addedTokens++;
+  }
+  saveTokens(tokens);
+
+  if (data.processed && typeof data.processed === 'object') {
+    const proc = loadProcessed();
+    for (const [tok, boxes] of Object.entries(data.processed)) if (!proc[tok]) proc[tok] = boxes;
+    store.writeJson(FILES.processed, proc);
+  }
+
+  let telegramImported = false;
+  if (data.telegram && data.telegram.botToken && !telegram.config().botTokenEnc) {
+    const { botToken, ...cfg } = data.telegram;
+    telegram.save({ ...cfg, botTokenEnc: vault.encrypt(botToken) });
+    telegram.restart();
+    telegramImported = true;
+  }
+  audit({ event: 'backup_import', ip: req.socket.remoteAddress, mailboxes: addedBoxes });
+  res.json({ ok: true, addedBoxes, skippedBoxes, addedTokens, telegramImported });
+});
+
+// ---------- Avviso di aggiornamento ----------
+// Una volta al giorno chiede a GitHub qual è l'ultima versione pubblicata. Non invia nessun dato
+// tuo: solo una richiesta pubblica, come aprire la pagina delle release. Si può spegnere.
+const UPDATE_URL = process.env.LEGGIO_UPDATE_URL || 'https://api.github.com/repos/Andreadileo/leggio/releases/latest';
+const RELEASES_PAGE = 'https://github.com/Andreadileo/leggio/releases';
+let updateInfo = null; // { latest, url, checkedAt }
+const loadSettings = () => store.readJson(FILES.settings, {});
+const updateCheckEnabled = () => process.env.LEGGIO_UPDATE_CHECK !== '0' && loadSettings().updateCheck !== false;
+const semver = (v) => String(v || '').replace(/^v/, '').split('.').map(n => parseInt(n, 10) || 0);
+const isNewer = (a, b) => { const x = semver(a), y = semver(b); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; };
+async function checkForUpdate(force) {
+  if (!updateCheckEnabled()) return null;
+  if (!force && updateInfo && Date.now() - updateInfo.checkedAt < 24 * 3600 * 1000) return updateInfo;
+  try {
+    const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 6000);
+    const r = await fetch(UPDATE_URL, { headers: { 'User-Agent': 'Leggio/' + VERSION, Accept: 'application/vnd.github+json' }, signal: ctrl.signal });
+    clearTimeout(t);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    const url = typeof j.html_url === 'string' && j.html_url.startsWith(RELEASES_PAGE) ? j.html_url : RELEASES_PAGE;
+    updateInfo = { latest: String(j.tag_name || '').replace(/^v/, ''), url, checkedAt: Date.now() };
+  } catch (_) { updateInfo = { latest: null, url: RELEASES_PAGE, checkedAt: Date.now() }; }
+  return updateInfo;
+}
+admin.get('/admin/update', async (req, res) => {
+  const enabled = updateCheckEnabled();
+  const info = enabled ? await checkForUpdate(false) : null;
+  res.json({ enabled, current: VERSION, latest: info && info.latest, newer: !!(info && info.latest && isNewer(info.latest, VERSION)), url: (info && info.url) || RELEASES_PAGE });
+});
+admin.post('/admin/update', (req, res) => {
+  const enabled = !!(req.body && req.body.enabled);
+  store.writeJson(FILES.settings, { ...loadSettings(), updateCheck: enabled });
+  if (!enabled) updateInfo = null;
+  res.json({ ok: true, enabled: updateCheckEnabled() });
 });
 
 admin.get('/admin/accounts', (req, res) => res.json(loadAccounts().map(publicAccount)));

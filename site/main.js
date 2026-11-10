@@ -5,7 +5,7 @@
     nav_how: 'Come funziona', nav_install: 'Installa',
     h1: 'Il tuo agente AI può leggere la tua posta. Nient’altro.',
     lede: 'Leggio collega le tue caselle in sola lettura e dà agli agenti una piccola API locale con token revocabili. Nessuna richiesta può inviare, spostare o cancellare una mail, e le mail che provano a dare ordini al tuo agente vengono segnalate prima che le legga.',
-    cta_gh: 'Vedi su GitHub', cta_install: 'Installalo in due minuti',
+    cta_dl: 'Scarica per Windows', cta_gh: 'Vedi su GitHub',
     fine: 'Gratuito e open source (AGPL-3.0). Gira sul tuo computer: la tua posta non passa da nessun altro.',
     term_title: 'Quello che vede il tuo agente',
     t1: '3 mail nuove', t2: '“Il pacco dell’ordine 4821 non è arrivato”', t3: 'nessuna richiesta può scrivere nella casella',
@@ -46,9 +46,9 @@
     lim4: 'Il bot Telegram funziona mentre Leggio è acceso. Per avvisi a ogni ora, fallo girare su un server.',
     lim5: 'La console per ora è in italiano. Una versione inglese è benvenuta come contributo.',
     inst_h: 'Installa',
-    s1h: 'Installa Node.js', s1: 'Versione 20.19 o successiva, da <a href="https://nodejs.org">nodejs.org</a>.',
-    s2h: 'Scarica e avvia Leggio', s2: 'Su Windows puoi scaricare lo ZIP da GitHub e fare doppio clic su <code>Avvia Leggio.bat</code>.',
-    s3h: 'Configuralo dalla console', s3: 'Apri <code>http://localhost:4000</code>. Scegli la password della console, collega una casella (i preset spiegano cosa vuole ogni provider) e crea un token per il tuo agente.',
+    s1h: 'Scarica Leggio', s1: 'Su Windows scarica <a href="DL_URL">Leggio.exe</a> e fai doppio clic: non c’è niente da installare. Il file non è ancora firmato digitalmente, quindi Windows può dire di aver protetto il PC: clicca <b>Ulteriori informazioni</b> e poi <b>Esegui comunque</b>.',
+    s2h: 'Oppure avvialo dal codice', s2: 'Su Mac, Linux o un server. Serve Node.js 20.19 o successivo, da <a href="https://nodejs.org">nodejs.org</a>.',
+    s3h: 'Configuralo dalla console', s3: 'Apri <code>http://localhost:4000</code>. Scegli la password della console, collega una casella (i preset spiegano cosa vuole ogni provider) e crea un token per il tuo agente. Cambi computer? Esporta un backup cifrato e importalo lì.',
     s4h: 'Fai leggere il tuo agente', s4: 'L’API completa è nel <a href="README_IT_URL">README</a>.',
     os_h: 'Open source, e resterà così',
     os_p: 'Leggio è pubblicato con la licenza GNU AGPL-3.0. Usalo, modificalo, condividilo. Se offri una versione modificata ad altri via rete, pubblica le tue modifiche con la stessa licenza.',
@@ -64,6 +64,7 @@
   // I link al repository nelle stringhe italiane prendono l'indirizzo dalla pagina (un solo posto da cambiare).
   const repo = document.querySelector('.nav .gh').href.replace(/\/$/, '');
   IT.s4 = IT.s4.replace('README_IT_URL', repo + '/blob/main/README.it.md');
+  IT.s1 = IT.s1.replace('DL_URL', repo + '/releases/latest/download/Leggio.exe');
   IT.os_sec = IT.os_sec.replace('SECURITY_URL', repo + '/blob/main/SECURITY.md');
 
   const nodes = [...document.querySelectorAll('[data-i18n],[data-i18n-html]')];

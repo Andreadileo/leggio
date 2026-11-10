@@ -51,6 +51,7 @@
   </aside>
 
   <main class="main">
+    <div class="banner hidden" id="updateBanner"><span id="updateText"></span><a class="btn" id="updateLink" target="_blank" rel="noopener noreferrer">Scarica</a></div>
 
     <!-- POSTA -->
     <section class="page" id="view-inbox">
@@ -199,6 +200,31 @@
           <div class="err" id="lockErr" role="alert"></div>
           <div class="actions"><button class="btn primary" type="submit" id="lockSubmit"></button></div>
         </form>
+      </div>
+      <div class="panel">
+        <h2>Backup: porta tutto su un altro computer</h2>
+        <p class="muted" style="margin-bottom:14px">Il file contiene caselle (con le password), token, registro delle mail elaborate e bot Telegram, cifrati con la password del backup. Sull'altro computer apri Leggio, scegli la password della console e importa il file qui.</p>
+        <form class="stack" id="bkExportForm" autocomplete="off">
+          <div class="grid2">
+            <label class="field"><span>Password del backup (almeno 12 caratteri)</span><input type="password" id="bkPass" autocomplete="new-password" minlength="12" required></label>
+            <label class="field"><span>Ripetila</span><input type="password" id="bkPass2" autocomplete="new-password" minlength="12" required></label>
+          </div>
+          <label class="field"><span>Password della console, per confermare</span><input type="password" id="bkConsole" autocomplete="current-password" required></label>
+          <div class="hint warn">Chi ha il file e la sua password può leggere la tua posta. Conservalo come una password, e non mandarlo per email.</div>
+          <div class="err" id="bkExportErr" role="alert"></div>
+          <div class="actions"><button class="btn primary" type="submit">Scarica il backup</button></div>
+        </form>
+        <form class="stack" id="bkImportForm" autocomplete="off" style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line)">
+          <label class="field"><span>File di backup da importare</span><input type="file" id="bkFile" accept=".json,application/json" required></label>
+          <label class="field"><span>Password del backup</span><input type="password" id="bkImportPass" autocomplete="off" required></label>
+          <div class="err" id="bkImportErr" role="alert"></div>
+          <div class="actions"><button class="btn" type="submit">Importa</button><span class="muted" id="bkImportOk"></span></div>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>Aggiornamenti</h2>
+        <div class="row"><div class="main-col"><strong id="updState"></strong><span class="muted">Una volta al giorno Leggio chiede a GitHub qual è l'ultima versione. Non invia nessun dato tuo.</span></div>
+          <button class="btn" type="button" id="updToggle"></button></div>
       </div>
       <div class="panel">
         <h2>Cosa fa Leggio per proteggerti</h2>

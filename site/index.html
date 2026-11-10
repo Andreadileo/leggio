@@ -41,8 +41,8 @@
         <h1 data-i18n="h1">Your AI agent can read your email. Nothing more.</h1>
         <p class="lede" data-i18n="lede">Leggio connects your mailboxes read-only and gives agents a small local API with revocable tokens. No request can send, move or delete a message, and emails that try to give your agent orders are flagged before it reads them.</p>
         <div class="cta">
-          <a class="btn primary" href="https://github.com/Andreadileo/leggio" data-i18n="cta_gh">View on GitHub</a>
-          <a class="btn" href="#install" data-i18n="cta_install">Install in two minutes</a>
+          <a class="btn primary" href="https://github.com/Andreadileo/leggio/releases/latest/download/Leggio.exe" data-i18n="cta_dl">Download for Windows</a>
+          <a class="btn" href="https://github.com/Andreadileo/leggio" data-i18n="cta_gh">View on GitHub</a>
         </div>
         <p class="fine" data-i18n="fine">Free and open source (AGPL-3.0). It runs on your own computer, so your mail never passes through anyone else.</p>
       </div>
@@ -184,20 +184,20 @@
       <h2 data-i18n="inst_h">Install</h2>
       <ol class="steps">
         <li>
-          <h3 data-i18n="s1h">Get Node.js</h3>
-          <p data-i18n-html="s1">Version 20.19 or newer, from <a href="https://nodejs.org">nodejs.org</a>.</p>
+          <h3 data-i18n="s1h">Download Leggio</h3>
+          <p data-i18n-html="s1">On Windows, download <a href="https://github.com/Andreadileo/leggio/releases/latest/download/Leggio.exe">Leggio.exe</a> and double-click it: nothing to install. The file isn’t digitally signed yet, so Windows may say it protected your PC: click <b>More info</b>, then <b>Run anyway</b>.</p>
         </li>
         <li>
-          <h3 data-i18n="s2h">Download and start Leggio</h3>
+          <h3 data-i18n="s2h">Or run it from the source code</h3>
 <pre><code>git clone https://github.com/Andreadileo/leggio.git
 cd leggio
 npm install --omit=dev
 npm start</code></pre>
-          <p data-i18n-html="s2">On Windows you can download the ZIP from GitHub and double-click <code>Avvia Leggio.bat</code>.</p>
+          <p data-i18n-html="s2">On Mac, Linux or a server. You need Node.js 20.19 or newer, from <a href="https://nodejs.org">nodejs.org</a>.</p>
         </li>
         <li>
           <h3 data-i18n="s3h">Set it up in the console</h3>
-          <p data-i18n-html="s3">Open <code>http://localhost:4000</code>. Choose the console password, connect a mailbox (presets explain what each provider needs), and create a token for your agent.</p>
+          <p data-i18n-html="s3">Open <code>http://localhost:4000</code>. Choose the console password, connect a mailbox (presets explain what each provider needs), and create a token for your agent. Moving to another computer? Export an encrypted backup and import it there.</p>
         </li>
         <li>
           <h3 data-i18n="s4h">Let your agent read</h3>

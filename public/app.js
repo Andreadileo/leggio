@@ -95,7 +95,56 @@ async function showApp() {
   $('version').textContent = 'Versione ' + status.version;
   await loadAccounts();
   go(location.hash.slice(1) || 'inbox');
+  checkUpdate();
 }
+// ================= Aggiornamenti =================
+let upd = null;
+async function checkUpdate() {
+  try { upd = await api('/admin/update'); } catch (_) { return; }
+  if (upd.newer) {
+    $('updateText').textContent = `È disponibile Leggio ${upd.latest} (hai la ${upd.current}).`;
+    $('updateLink').href = upd.url;
+    show($('updateBanner'), true);
+  } else show($('updateBanner'), false);
+}
+function renderUpdate() {
+  if (!upd) return;
+  $('updState').textContent = !upd.enabled ? 'Controllo spento' : upd.newer ? `Disponibile la versione ${upd.latest}` : `Hai l'ultima versione (${upd.current})`;
+  $('updToggle').textContent = upd.enabled ? 'Spegni il controllo' : 'Accendi il controllo';
+}
+$('updToggle').addEventListener('click', async () => {
+  try { await api('/admin/update', { method: 'POST', body: { enabled: !upd.enabled } }); await checkUpdate(); renderUpdate(); } catch (err) { toast(err.message); }
+});
+
+// ================= Backup =================
+$('bkExportForm').addEventListener('submit', async (e) => {
+  e.preventDefault(); $('bkExportErr').textContent = '';
+  if ($('bkPass').value !== $('bkPass2').value) { $('bkExportErr').textContent = 'Le due password del backup non coincidono.'; return; }
+  try {
+    const file = await api('/admin/backup/export', { method: 'POST', body: { password: $('bkConsole').value, backupPassword: $('bkPass').value } });
+    const blob = new Blob([JSON.stringify(file)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `leggio-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    ['bkPass', 'bkPass2', 'bkConsole'].forEach(i => { $(i).value = ''; });
+    toast('Backup scaricato');
+  } catch (err) { $('bkExportErr').textContent = err.message; }
+});
+$('bkImportForm').addEventListener('submit', async (e) => {
+  e.preventDefault(); $('bkImportErr').textContent = ''; $('bkImportOk').textContent = '';
+  const f = $('bkFile').files[0];
+  if (!f) return;
+  let backup;
+  try { backup = JSON.parse(await f.text()); } catch (_) { $('bkImportErr').textContent = 'Il file non è un backup di Leggio.'; return; }
+  try {
+    const r = await api('/admin/backup/import', { method: 'POST', body: { backup, backupPassword: $('bkImportPass').value } });
+    $('bkImportPass').value = ''; $('bkFile').value = '';
+    $('bkImportOk').textContent = `Importate ${r.addedBoxes} caselle e ${r.addedTokens} token` + (r.skippedBoxes ? ` (${r.skippedBoxes} già presenti, saltate)` : '') + (r.telegramImported ? ', più il bot Telegram' : '') + '.';
+    await loadAccounts();
+  } catch (err) { $('bkImportErr').textContent = err.message; }
+});
 $('logoutBtn').addEventListener('click', async () => { try { await api('/admin/logout', { method: 'POST' }); } catch (_) {} setSession(null); location.reload(); });
 
 // ================= Navigazione =================
@@ -416,6 +465,7 @@ const EVENTS = {
   unlock: 'Leggio sbloccato dopo il riavvio', unlock_fail: 'Sblocco non riuscito', login: 'Accesso alla console', login_fail: 'Password della console sbagliata',
   console_setup: 'Password della console scelta', setup_fail: 'Codice di primo avvio sbagliato', password_changed: 'Password della console cambiata',
   lock_on: 'Blocco al riavvio attivato', lock_off: 'Blocco al riavvio spento',
+  backup_export: 'Backup esportato', backup_import: 'Backup importato',
   mailbox_added: 'Casella collegata', mailbox_removed: 'Casella scollegata',
   telegram: 'Comando Telegram', telegram_linked: 'Chat Telegram collegata', telegram_unlinked: 'Chat Telegram scollegata',
   telegram_ignored: 'Messaggio da una chat sconosciuta', telegram_config: 'Impostazioni Telegram', telegram_removed: 'Bot rimosso',
@@ -431,6 +481,7 @@ async function loadAudit() {
 
 // ================= Sicurezza =================
 function renderSecurity() {
+  renderUpdate();
   const lock = !!status.lockOnRestart;
   $('lockText').textContent = lock
     ? 'Attivo. La chiave che cifra le password delle caselle e il token del bot è protetta dalla password della console: dopo ogni riavvio nessun agente e nessun bot legge la posta finché non entri qui.'

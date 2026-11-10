@@ -4,7 +4,7 @@
 
 <p align="center"><b>Read-only email for AI agents.</b><br>Your agent can read your mail. It can't send, move, delete, or be talked into it.</p>
 
-<p align="center"><a href="README.it.md">Italiano</a> · <a href="#quick-start">Quick start</a> · <a href="#api">API</a></p>
+<p align="center"><a href="README.it.md">Italiano</a> · <a href="#download-for-windows">Download</a> · <a href="#quick-start-from-source">Quick start</a> · <a href="#api">API</a></p>
 
 ---
 
@@ -25,8 +25,18 @@ It runs on your own computer or server. Your mail never goes through a third-par
 - **A console password, always.** Nobody gets into the console without it, including an agent running on the same machine: agents only ever get their token. The first run is confirmed with a one-time code shown in Leggio's terminal, so a local program can't claim the console before you do.
 - **Optional lock on restart.** The key that encrypts mailbox passwords and the bot token is then protected by the console password, and after a restart nothing reads mail until you log in. Good for a laptop; leave it off on a server that restarts on its own.
 - **A local console** to connect mailboxes, issue tokens, read mail safely (no scripts, no remote images, so no tracking pixels) and review the access log.
+- **Encrypted backup.** Export mailboxes, tokens and the bot into one file protected by a password, and import it on another computer. Mailbox IDs and tokens stay the same, so your agents keep working.
+- **Update notice.** Once a day the console checks GitHub for a newer release. Nothing about you is sent, and you can turn it off.
 
-## Quick start
+No accounts, no cloud: every copy of Leggio is independent and keeps its data on its own computer.
+
+## Download for Windows
+
+Download **[Leggio.exe](https://github.com/Andreadileo/leggio/releases/latest/download/Leggio.exe)** and double-click it. Nothing to install, Node.js not needed. Your data goes in `%APPDATA%\Leggio`.
+
+The file isn't digitally signed yet, so Windows may show *"Windows protected your PC"*: click **More info → Run anyway**. You can check what you're running: the source of every release is in this repository.
+
+## Quick start (from source)
 
 You need [Node.js](https://nodejs.org) **20.19 or newer**.
 
@@ -76,7 +86,7 @@ Pass `text_for_agent` rather than `text`, and treat `security.level == "high"` a
 
 | Variable | Purpose | Default |
 |---|---|---|
-| `LEGGIO_DATA_DIR` | Data folder for this instance. Two instances with different folders share nothing. | `%APPDATA%\Leggio` or `~/Leggio` (the Windows launcher uses `%APPDATA%\Leggio-Personale`) |
+| `LEGGIO_DATA_DIR` | Data folder for this instance. Two instances with different folders share nothing. | `%APPDATA%\Leggio` on Windows, `~/Leggio` elsewhere |
 | `PORT` | API port (and console port in local mode) | `4000` |
 | `HOST` | API listen address | `127.0.0.1` |
 | `ADMIN_PORT` | Console port when `HOST` is not local | `PORT + 1` |
@@ -104,7 +114,7 @@ Found a vulnerability? Please read [SECURITY.md](SECURITY.md) and report it priv
 
 ## Tests
 
-The tests run against a real IMAP server (Dovecot) and a fake Telegram API. They cover read-only behaviour, tokens, the console password and the lock on restart, console protections, injection flags, and the bot's privacy rules: 70 tests in all. On Linux:
+The tests run against a real IMAP server (Dovecot) and a fake Telegram API. They cover read-only behaviour, tokens, the console password and the lock on restart, console protections, injection flags, and the bot's privacy rules: 85 tests in all. On Linux:
 
 ```bash
 sudo apt-get install -y dovecot-imapd
