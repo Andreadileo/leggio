@@ -36,6 +36,11 @@ const customCache = path.join(os.tmpdir(), 'leggio-pkg-cache');
 const customDir = path.join(customCache, path.basename(path.dirname(fetched)));
 fs.mkdirSync(customDir, { recursive: true });
 const built = path.join(customDir, path.basename(fetched).replace(/^fetched-/, 'built-'));
+// Riusa gli altri binari già scaricati (es. quello del sistema su cui si costruisce): niente download doppi.
+for (const f of fs.readdirSync(path.dirname(fetched))) {
+  const dest = path.join(customDir, f);
+  if (f.startsWith('fetched-') && !fs.existsSync(dest)) fs.copyFileSync(path.join(path.dirname(fetched), f), dest);
+}
 
 const exe = ResEdit.NtExecutable.from(fs.readFileSync(fetched), { ignoreCert: true });
 const res = ResEdit.NtExecutableResource.from(exe);
